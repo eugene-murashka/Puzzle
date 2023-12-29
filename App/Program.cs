@@ -2,15 +2,16 @@
 
 internal class Program
 {
-    private static readonly List<(bool, long)> Statistic = new List<(bool, long)> ();
-
     private static async Task Main(string[] args)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
+        var statistic = Statistic.Instance;
 
         var r = new Random();
         var index = 0;
         var isCorrectAnswer = false;
+
+        (bool, long) statisticItem; 
 
         while (true)
         {
@@ -47,20 +48,32 @@ internal class Program
                 Console.WriteLine($"Правильный ответ: {ariOper.Answer}");
             }
 
-            Statistic.Add((isCorrectAnswer, sw.ElapsedMilliseconds));
+            statisticItem = (isCorrectAnswer, sw.ElapsedMilliseconds);
+            statistic.Items.Add(statisticItem);
 
             Console.WriteLine();
         }
 
-        // Статистика правильных ответов
-        // Статистика среднего времени на ответ
-
         Console.WriteLine("Ваша статистика:\n" +
-            $"Правильные ответы: {Statistic.Count(s => s.Item1)}/{Statistic.Count} - {(float)(Statistic.Count(s => s.Item1))/(float)(Statistic.Count)*100}%\n" +
-            $"Среднее время на ответ: {Statistic.Sum(s => s.Item2)/Statistic.Count/1000.00}s");
+            $"Правильные ответы: {statistic.PosResCount}/{statistic.Count} - {statistic.Grade} баллов\n" +
+            $"Среднее время на ответ: {statistic.AwerageTimer}s");
 
         Console.WriteLine();
         Console.WriteLine("Спасибо за работу!");
+    }
+
+    internal class Statistic
+    {
+        internal readonly List<(bool isCorrectAnswer, long timer)> Items = new List<(bool isCorrectAnswer, long timer)>();
+        
+        internal int Grade => 100 * Items.Count(s => s.Item1) / Items.Count;
+        internal int Count => Items.Count;
+        internal int PosResCount => Items.Count(s => s.Item1);
+        internal float AwerageTimer => (float)Items.Sum(s => s.Item2) / (float)Items.Count / 1000.00F;
+        
+        internal static Statistic Instance => new Statistic();
+
+        private Statistic() { }
     }
 
     public interface IArithmeticOperation
